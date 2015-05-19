@@ -83,5 +83,9 @@
         <groupId>org.kitesdk</groupId>
         <artifactId>kite-morphlines-useragent</artifactId>
       </dependency>
+      <dependency>
+          <groupId>org.kitesdk</groupId>
+          <artifactId>kite-morphlines-cas</artifactId>
+      </dependency>
   </dependencies>
 </project>

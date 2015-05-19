@@ -111,7 +111,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     <!-- Java versions -->
-    <javaVersion>1.7</javaVersion>
+    <javaVersion>1.8</javaVersion>
     <targetJavaVersion>1.6</targetJavaVersion>
     <Xdoclint /> <!-- set by the java8 profile to turn off doclint -->
 
@@ -569,6 +569,7 @@
               <exclude>**/src/test/resources/test-documents/**</exclude> <!-- ASL 2.0 -->
               <exclude>**/src/site/**/*.confluence</exclude>
               <exclude>**/nbactions.xml</exclude> <!-- Netbeans configs, not checked in -->
+              <exclude>**/org/apache/uima/**</exclude> <!-- UIMA generated types -->
             </excludes>
           </configuration>
         </plugin>
