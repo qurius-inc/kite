@@ -46,6 +46,7 @@
     <module>kite-morphlines-solr-cell</module>
     <module>kite-morphlines-all</module>
     <module>kite-morphlines-all-except-solr</module>
+    <module>kite-morphlines-cas</module>
   </modules>
 
   <dependencyManagement>
@@ -152,6 +153,11 @@
         <artifactId>kite-morphlines-protobuf</artifactId>
         <version>${project.version}</version>
       </dependency>
+        <dependency>
+            <groupId>org.kitesdk</groupId>
+            <artifactId>kite-morphlines-cas</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
   </dependencyManagement>
 
