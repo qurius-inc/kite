@@ -16,13 +16,24 @@
 package org.kitesdk.morphline.cas;
 
 import com.typesafe.config.Config;
+import org.apache.uima.UIMAException;
+import org.apache.uima.cas.FSIterator;
+import org.apache.uima.cas.admin.CASMgr;
+import org.apache.uima.cas.impl.AnnotationImpl;
+import org.apache.uima.cas.impl.CASCompleteSerializer;
+import org.apache.uima.cas.impl.Serialization;
+import org.apache.uima.fit.factory.JCasFactory;
+import org.apache.uima.jcas.JCas;
+import org.apache.uima.jcas.tcas.Annotation;
 import org.kitesdk.morphline.api.Command;
 import org.kitesdk.morphline.api.CommandBuilder;
 import org.kitesdk.morphline.api.MorphlineContext;
 import org.kitesdk.morphline.api.Record;
 import org.kitesdk.morphline.stdio.AbstractParser;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -55,8 +66,42 @@ public final class ReadCasBuilder implements CommandBuilder {
         }
 
         @Override
-        protected boolean doProcess(Record inputRecord, InputStream in) {
-            System.out.println("inside readcas doprocess");
+        protected boolean doProcess(Record inputRecord, InputStream in) throws IOException {
+            ObjectInputStream oins = (ObjectInputStream) in;
+            Object obj = null;
+            CASCompleteSerializer casCompleteSerializer = null;
+            JCas jCas = null;
+
+            try {
+                obj = oins.readObject();
+            } catch (ClassNotFoundException e) {
+               return false;
+            }
+
+            if (obj instanceof CASCompleteSerializer) {
+                casCompleteSerializer = (CASCompleteSerializer) obj;
+            } else {
+                throw new IOException("Deserialized Object is not an instance of CASCompleteSerializer");
+            }
+
+            try {
+                 jCas = JCasFactory.createJCas();
+                CASMgr casMgr = jCas.getCasImpl();
+                Serialization.deserializeCASComplete(casCompleteSerializer, casMgr);
+
+                String content = jCas.getDocumentText();
+                System.out.println(" ** Main Content ** \n" + content);
+            } catch (UIMAException e) {
+                return false;
+            }
+
+            /* Check the Annotations */
+            FSIterator iterator = jCas.getAnnotationIndex().iterator();
+            while (iterator.hasNext()) {
+                AnnotationImpl annotation = (AnnotationImpl) iterator.next();
+                System.out.print("\n *** " + annotation.getCoveredText() + "\n");
+                System.out.print(annotation.toString());
+            }
 
             return true;
         }
