@@ -63,6 +63,12 @@
             <scope>test</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.kitesdk</groupId>
+            <artifactId>kite-morphlines-solr-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+
         <dependency> <!-- see http://www.slf4j.org -->
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>

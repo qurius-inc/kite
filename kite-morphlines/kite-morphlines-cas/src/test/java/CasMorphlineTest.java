@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
 import org.apache.uima.TokenAnnotation;
 import org.apache.uima.UIMAException;
 import org.apache.uima.UIMAFramework;
@@ -29,11 +31,15 @@ import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.junit.Test;
 import org.kitesdk.morphline.api.AbstractMorphlineTest;
+import org.kitesdk.morphline.api.MorphlineRuntimeException;
 import org.kitesdk.morphline.api.Record;
 import org.kitesdk.morphline.base.Fields;
 
 import java.io.*;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 /**
  * Created by newton on 5/18/15.
@@ -41,7 +47,7 @@ import java.util.Iterator;
 public class CasMorphlineTest extends AbstractMorphlineTest {
 
     // Create byte buffer that holds the a serialized test CAS Object
-    public static byte[] testByteArrayFactory() throws UIMAException, IOException {
+    public static CASCompleteSerializer testCAS() throws UIMAException, IOException {
         String testString = "I like to travel through the Ether.";
 
         //TypeSystemDescription tsd = TypeSystemDescriptionFactory.createTypeSystemDescription("org.apache.uima.TokenAnnotation", "org.apache.uima.SentenceAnnotation");
@@ -55,34 +61,30 @@ public class CasMorphlineTest extends AbstractMorphlineTest {
         AnalysisEngine ae = UIMAFramework.produceAnalysisEngine(aed);
         ae.process(jCas);
 
-        CASCompleteSerializer casCompleteSerializer = Serialization.serializeCASComplete(jCas.getCasImpl());
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
-        objectOutputStream.writeObject(casCompleteSerializer);
-
-
-        return byteArrayOutputStream.toByteArray();
+        return Serialization.serializeCASComplete(jCas.getCasImpl());
     }
 
     @Test
-    public void testReadCas() throws Exception {
-        morphline = createMorphline("test-morphlines/readCas");
+    public void testCasRecord() throws Exception {
+        morphline = createMorphline("test-morphlines/casRecord");
 
-        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(testByteArrayFactory());
-        ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream);
         Record record = new Record();
-        record.put(Fields.ATTACHMENT_BODY, objectInputStream);
+        record.put(Fields.ATTACHMENT_BODY, testCAS());
 
         collector.reset();
         startSession();
         assertEquals(1, collector.getNumStartEvents());
         assertTrue(morphline.process(record));
-        Iterator<Record> iter = collector.getRecords().iterator();
-
-        objectInputStream.close();
     }
 
     @Test
-    public void test() {
+    public void testCasIndexer() throws Exception {
+        morphline = createMorphline("test-morphlines/casIndexer");
+
+        Record record = new Record();
+        record.put(Fields.ATTACHMENT_BODY, testCAS());
+
+        morphline.process(record);
     }
+
 }
