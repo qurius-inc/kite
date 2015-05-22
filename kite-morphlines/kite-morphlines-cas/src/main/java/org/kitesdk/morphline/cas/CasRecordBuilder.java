@@ -33,6 +33,7 @@ import org.kitesdk.morphline.base.Fields;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.UUID;
 
 /**
  * Command that parses an InputStream that contains CAS data; for each CAS object in the stream,
@@ -58,6 +59,7 @@ public final class CasRecordBuilder implements CommandBuilder {
     ///////////////////////////////////////////////////////////////////////////////
     private static final class CasRecord extends AbstractCommand {
 
+        private final String id = "id";
         private final String document = "DOCUMENT";
         private final String cas_view = "VIEW";
         private final String ann_key = "ANNOTATION";
@@ -82,6 +84,7 @@ public final class CasRecordBuilder implements CommandBuilder {
             Record outputRecord = inputRecord.copy();
             outputRecord.removeAll(Fields.ATTACHMENT_BODY);
 
+            outputRecord.put(id, UUID.randomUUID().toString());
             outputRecord.put(document, jCas.getDocumentText());
             outputRecord.put(cas_view, jCas.getViewName());
 
