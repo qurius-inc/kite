@@ -34,6 +34,7 @@ import org.kitesdk.morphline.api.AbstractMorphlineTest;
 import org.kitesdk.morphline.api.MorphlineRuntimeException;
 import org.kitesdk.morphline.api.Record;
 import org.kitesdk.morphline.base.Fields;
+import org.kitesdk.morphline.base.Notifications;
 
 import java.io.*;
 import java.util.Collection;
@@ -85,6 +86,7 @@ public class CasMorphlineTest extends AbstractMorphlineTest {
         record.put(Fields.ATTACHMENT_BODY, testCAS());
 
         morphline.process(record);
+        Notifications.notifyCommitTransaction(morphline);
     }
 
 }
