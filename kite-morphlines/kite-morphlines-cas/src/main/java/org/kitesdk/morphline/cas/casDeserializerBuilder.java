@@ -15,21 +15,21 @@
  */
 package org.kitesdk.morphline.cas;
 
-import com.sun.xml.internal.messaging.saaj.util.ByteInputStream;
 import com.typesafe.config.Config;
 import org.apache.hadoop.io.BytesWritable;
+import org.apache.uima.cas.admin.CASMgr;
 import org.apache.uima.cas.impl.CASCompleteSerializer;
+import org.apache.uima.cas.impl.Serialization;
+import org.apache.uima.fit.factory.JCasFactory;
+import org.apache.uima.jcas.JCas;
 import org.kitesdk.morphline.api.Command;
 import org.kitesdk.morphline.api.CommandBuilder;
 import org.kitesdk.morphline.api.MorphlineContext;
 import org.kitesdk.morphline.api.Record;
 import org.kitesdk.morphline.base.AbstractCommand;
-import org.kitesdk.morphline.base.Configs;
 import org.kitesdk.morphline.base.Fields;
-import org.kitesdk.morphline.stdio.AbstractParser;
 
 import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.util.Collection;
 import java.util.Collections;
@@ -37,7 +37,7 @@ import java.util.Collections;
 /**
  * Created by newton on 5/22/15.
  */
-public class casDeserializer implements CommandBuilder {
+public class CasDeserializerBuilder implements CommandBuilder {
 
     @Override
     public Collection<String> getNames() {
@@ -69,8 +69,12 @@ public class casDeserializer implements CommandBuilder {
                ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream);
                CASCompleteSerializer casCompleteSerializer = (CASCompleteSerializer) objectInputStream.readObject();
 
-               Record outputRecord = new Record();
-               outputRecord.put(Fields.ATTACHMENT_BODY, casCompleteSerializer);
+               JCas jCas = JCasFactory.createJCas();
+               CASMgr casMgr = jCas.getCasImpl();
+               Serialization.deserializeCASComplete(casCompleteSerializer, casMgr);
+
+               Record outputRecord = inputRecord.copy();
+               outputRecord.put(Fields.ATTACHMENT_BODY, jCas);
                getChild().process(outputRecord);
            } catch (Exception e) {
                return false;

@@ -13,15 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ListMultimap;
-import org.apache.uima.TokenAnnotation;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.io.BytesWritable;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.io.Text;
 import org.apache.uima.UIMAException;
 import org.apache.uima.UIMAFramework;
 import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.annotator.WhitespaceTokenizer;
-import org.apache.uima.cas.admin.CASMgr;
 import org.apache.uima.cas.impl.CASCompleteSerializer;
 import org.apache.uima.cas.impl.Serialization;
 import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
@@ -31,16 +33,11 @@ import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.junit.Test;
 import org.kitesdk.morphline.api.AbstractMorphlineTest;
-import org.kitesdk.morphline.api.MorphlineRuntimeException;
 import org.kitesdk.morphline.api.Record;
 import org.kitesdk.morphline.base.Fields;
-import org.kitesdk.morphline.base.Notifications;
 
 import java.io.*;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by newton on 5/18/15.
@@ -48,7 +45,7 @@ import java.util.Map;
 public class CasMorphlineTest extends AbstractMorphlineTest {
 
     // Create byte buffer that holds the a serialized test CAS Object
-    public static CASCompleteSerializer testCAS() throws UIMAException, IOException {
+    public static JCas testCAS() throws UIMAException, IOException {
         String testString = "I like to travel through the Ether.";
 
         //TypeSystemDescription tsd = TypeSystemDescriptionFactory.createTypeSystemDescription("org.apache.uima.TokenAnnotation", "org.apache.uima.SentenceAnnotation");
@@ -62,8 +59,33 @@ public class CasMorphlineTest extends AbstractMorphlineTest {
         AnalysisEngine ae = UIMAFramework.produceAnalysisEngine(aed);
         ae.process(jCas);
 
-        return Serialization.serializeCASComplete(jCas.getCasImpl());
+        //return Serialization.serializeCASComplete(jCas.getCasImpl());
+        return jCas;
     }
+
+    private void createTestSequenceFile(File file) throws UIMAException, IOException {
+        FSDataOutputStream out = new FSDataOutputStream(new FileOutputStream(file), null);
+        SequenceFile.Writer writer = null;
+        SequenceFile.Metadata metadata = new SequenceFile.Metadata(getMetadataForSequenceFile());
+        writer = SequenceFile.createWriter(new Configuration(), out, IntWritable.class, BytesWritable.class,
+                SequenceFile.CompressionType.NONE, null, metadata);
+
+        JCas jCas = testCAS();
+        CASCompleteSerializer casCompleteSerializer = Serialization.serializeCASComplete(jCas.getCasImpl());
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
+        objectOutputStream.writeObject(casCompleteSerializer);
+
+        writer.append(new IntWritable(1), new BytesWritable(byteArrayOutputStream.toByteArray()));
+    }
+
+    private TreeMap<Text, Text> getMetadataForSequenceFile() {
+        TreeMap<Text, Text> metadata = new TreeMap<Text, Text>();
+        metadata.put(new Text("license"), new Text("Apache"));
+        metadata.put(new Text("year"), new Text("2015"));
+        return metadata;
+    }
+
 
     @Test
     public void testCasRecord() throws Exception {
@@ -85,8 +107,22 @@ public class CasMorphlineTest extends AbstractMorphlineTest {
         Record record = new Record();
         record.put(Fields.ATTACHMENT_BODY, testCAS());
 
-        morphline.process(record);
-        Notifications.notifyCommitTransaction(morphline);
+        assertTrue(morphline.process(record));
+        //Notifications.notifyCommitTransaction(morphline);
     }
 
+    @Test
+    public void testSeqCasIndexer() throws Exception {
+        morphline = createMorphline("test-morphlines/seqCasIndexer");
+
+        File sequenceFile = new File(RESOURCES_DIR, "test-data/test_cas.seq");
+        createTestSequenceFile(sequenceFile);
+        FileInputStream in = new FileInputStream(sequenceFile.getAbsolutePath());
+        Record record = new Record();
+        record.put(Fields.ATTACHMENT_BODY, in);
+        startSession();
+
+        assertEquals(1, collector.getNumStartEvents());
+        assertTrue(morphline.process(record));
+    }
 }

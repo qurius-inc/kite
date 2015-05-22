@@ -16,14 +16,10 @@
 package org.kitesdk.morphline.cas;
 
 import com.typesafe.config.Config;
-import org.apache.uima.UIMAException;
 import org.apache.uima.cas.FSIterator;
-import org.apache.uima.cas.admin.CASMgr;
 import org.apache.uima.cas.impl.AnnotationImpl;
-import org.apache.uima.cas.impl.CASCompleteSerializer;
-import org.apache.uima.cas.impl.Serialization;
-import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
+import org.apache.uima.jcas.tcas.Annotation;
 import org.kitesdk.morphline.api.Command;
 import org.kitesdk.morphline.api.CommandBuilder;
 import org.kitesdk.morphline.api.MorphlineContext;
@@ -70,18 +66,9 @@ public final class CasRecordBuilder implements CommandBuilder {
 
         @Override
         protected boolean doProcess(Record inputRecord) {
-            JCas jCas;
-            CASCompleteSerializer casCompleteSerializer = (CASCompleteSerializer) inputRecord.getFirstValue(Fields.ATTACHMENT_BODY);
+            JCas jCas = (JCas) inputRecord.getFirstValue(Fields.ATTACHMENT_BODY);
 
-            try {
-                jCas = JCasFactory.createJCas();
-                CASMgr casMgr = jCas.getCasImpl();
-                Serialization.deserializeCASComplete(casCompleteSerializer, casMgr);
-            } catch (UIMAException e) {
-                return false;
-            }
-
-            Record outputRecord = inputRecord.copy();
+            Record outputRecord = new Record();
             outputRecord.removeAll(Fields.ATTACHMENT_BODY);
 
             outputRecord.put(id, UUID.randomUUID().toString());
