@@ -58,6 +58,13 @@
         </dependency>
 
         <dependency>
+            <groupId>org.kitesdk</groupId>
+            <artifactId>${artifact.hadoop-deps}</artifactId>
+            <type>pom</type>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>test</scope>
