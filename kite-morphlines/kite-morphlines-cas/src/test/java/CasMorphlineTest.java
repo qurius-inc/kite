@@ -117,7 +117,8 @@ public class CasMorphlineTest extends AbstractMorphlineTest {
 
         File sequenceFile = new File(RESOURCES_DIR, "test-data/test_cas.seq");
         createTestSequenceFile(sequenceFile);
-        FileInputStream in = new FileInputStream(sequenceFile.getAbsolutePath());
+        //FileInputStream in = new FileInputStream(sequenceFile.getAbsolutePath());
+        FileInputStream in = new FileInputStream(new File("src/test/resources/test-data/nyt_head_5.seq"));
         Record record = new Record();
         record.put(Fields.ATTACHMENT_BODY, in);
         startSession();

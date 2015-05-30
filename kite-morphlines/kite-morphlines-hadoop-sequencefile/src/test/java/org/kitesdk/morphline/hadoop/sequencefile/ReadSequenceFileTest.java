@@ -15,20 +15,24 @@
  */
 package org.kitesdk.morphline.hadoop.sequencefile;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.TreeMap;
 
+import com.typesafe.config.ConfigException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.io.BytesWritable;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
+import org.apache.uima.cas.admin.CASMgr;
+import org.apache.uima.cas.impl.CASCompleteSerializer;
+import org.apache.uima.cas.impl.Serialization;
+import org.apache.uima.fit.factory.JCasFactory;
+import org.apache.uima.jcas.JCas;
 import org.junit.Test;
 import org.kitesdk.morphline.api.AbstractMorphlineTest;
 import org.kitesdk.morphline.api.Record;
@@ -54,12 +58,31 @@ public class ReadSequenceFileTest extends AbstractMorphlineTest {
     int numRecords = 5;
     HashMap<String, Record>  expected = createTextSequenceFile(sequenceFile, numRecords);
     InputStream in = new FileInputStream(sequenceFile.getAbsolutePath());
+    //InputStream in = new FileInputStream("src/test/resources/test-morphlines/nyt_head_5.seq");
     Record record = new Record();
     record.put(Fields.ATTACHMENT_BODY, in);
     startSession();
 
     assertEquals(1, collector.getNumStartEvents());
     assertTrue(morphline.process(record));
+    System.out.println("number of records " + collector.getRecords().size());
+
+    /*
+    List<Record> records = collector.getRecords();
+    for(Record rec : records) {
+        rec.getFirstValue("value");
+        BytesWritable bytesWritable = (BytesWritable) rec.getFirstValue("value");
+        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(bytesWritable.getBytes());
+        ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream);
+        CASCompleteSerializer casCompleteSerializer = (CASCompleteSerializer) objectInputStream.readObject();
+
+        JCas jCas = JCasFactory.createJCas();
+        CASMgr casMgr = jCas.getCasImpl();
+        Serialization.deserializeCASComplete(casCompleteSerializer, casMgr);
+
+        System.out.println("*** document ***" + jCas.getDocumentText());
+    }
+    */
     assertTrue(areFieldsEqual(expected, collector.getRecords()));
   }
 
