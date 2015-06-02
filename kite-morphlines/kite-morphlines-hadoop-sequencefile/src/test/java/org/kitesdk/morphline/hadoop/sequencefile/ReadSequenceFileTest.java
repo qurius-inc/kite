@@ -21,11 +21,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.TreeMap;
 
-import com.typesafe.config.ConfigException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.io.BytesWritable;
-import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
 import org.apache.uima.cas.admin.CASMgr;
@@ -67,8 +65,8 @@ public class ReadSequenceFileTest extends AbstractMorphlineTest {
     assertTrue(morphline.process(record));
     System.out.println("number of records " + collector.getRecords().size());
 
-    /*
     List<Record> records = collector.getRecords();
+    /*
     for(Record rec : records) {
         rec.getFirstValue("value");
         BytesWritable bytesWritable = (BytesWritable) rec.getFirstValue("value");
